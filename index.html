@@ -112,11 +112,22 @@
     const GROUP_SIZES = [12, 18, 12, 9]; 
 
     // ================= 后门配置区 =================
-    // 1. 绑定的座号（VIP 4人）
-    const VIP_NUMBERS = [39, 38, 28, 31]; 
 
-    // 2. 跨走廊 3x3 九宫格区域（包含 9 个物理座位编号）
-    const AREA_3X3_POSITIONS = [39, 38, 31, 40, 28, 25, 48, 37, 26]; 
+    // 1. 死死锁定的特定位置（格式： 位置索引 : 座号）
+    // 10 对应第一组最左下角；29 对应第二组最右下角
+    const FIXED_LOCKS = {
+      10: 17, // 如果图片中那个位置要放 17，改成 10: 17 即可
+      29: 13
+    };
+
+    // 2. 3x3 九宫格附近绑定的 4 人组
+    const VIP_NUMBERS = [39, 38, 28, 31]; 
+    const VIP_NUMBERS = [41, 23, 35, 20];
+     const VIP_NUMBERS = [34, 7, 24, 1];
+    
+    // 3x3 九宫格范围（包含 9 个物理座位编号，不与固定位置冲突）
+    const AREA_3X3_POSITIONS = [3, 15, 16, 5, 18, 19, 7, 21, 22]; 
+
     // ==============================================
 
     function getOriginalSeats() {
@@ -132,22 +143,31 @@
       return arr;
     }
 
-    // 暗箱计算：从 3x3 的 9 个格子中随机抽取 4 个安插 VIP 号码，其余随机填充
+    // 暗箱计算：合并死锁定位 + 九宫格随机绑定
     function generateRiggedSeats(baseSeats) {
-      const normalSeats = baseSeats.filter(num => !VIP_NUMBERS.includes(num));
+      const fixedNums = Object.values(FIXED_LOCKS);
+      
+      // 过滤出普通座号（排除固定号与VIP号）
+      const normalSeats = baseSeats.filter(num => !VIP_NUMBERS.includes(num) && !fixedNums.includes(num));
       const shuffledNormal = shuffle(normalSeats);
       const shuffledVip = shuffle(VIP_NUMBERS);
 
-      // 随机打乱 9 个九宫格格子，取前 4 个分配给 VIP
+      const finalSeats = new Array(TOTAL_SEATS);
+
+      // 第一步：写入绝对锁定的座位
+      Object.entries(FIXED_LOCKS).forEach(([posIndex, seatNum]) => {
+        finalSeats[Number(posIndex)] = Number(seatNum);
+      });
+
+      // 第二步：九宫格 9 选 4 安插 VIP
       const shuffledArea = shuffle(AREA_3X3_POSITIONS);
       const vipPositions = shuffledArea.slice(0, VIP_NUMBERS.length);
-
-      const finalSeats = new Array(TOTAL_SEATS);
 
       vipPositions.forEach((posIndex, idx) => {
         finalSeats[posIndex] = shuffledVip[idx];
       });
 
+      // 第三步：剩余位置填入普通号码
       let normalIdx = 0;
       for (let i = 0; i < TOTAL_SEATS; i++) {
         if (finalSeats[i] === undefined) {
@@ -180,20 +200,20 @@
       let count = 0;
       const baseSeats = getOriginalSeats();
 
-      // 过程动画：全真实随机滚动
+      // 滚动动画（显示全随机）
       const timer = setInterval(() => {
         renderSeats(shuffle(baseSeats));
         count++;
         if (count > 25) { 
           clearInterval(timer);
-          // 定格瞬间：触发暗箱逻辑
+          // 定格生成设定好的结果
           renderSeats(generateRiggedSeats(baseSeats));
           btn.disabled = false;
         }
       }, 40);
     }
 
-    // 初始渲染
+    // 初始显示
     renderSeats(getOriginalSeats());
   </script>
 </body>
