@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>座位抽签</title>
     <style>
-        /* ========== 暗色简洁主题 ========== */
+     
         * {
             box-sizing: border-box;
             margin: 0;
@@ -30,7 +30,7 @@
             border: 1px solid #333;
         }
 
-        /* 头部：仅按钮 */
+       
         .header {
             display: flex;
             justify-content: flex-end;
@@ -85,7 +85,7 @@
             margin-bottom: 8px;
         }
 
-        /* 老师座位（底部） */
+ 
         .teacher-row {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -109,7 +109,7 @@
             border: none;
         }
 
-        /* 座位格子 */
+
         .seat {
             aspect-ratio: 1 / 1.05;
             background: #2a2a2a;
@@ -143,9 +143,9 @@
             display: none;
         }
 
-        /* 动画时确保格子背景可见 */
+ 
         .seat .number.animating {
-            /* 动画由JS控制 */
+  
         }
 
         @media (max-width: 780px) {
@@ -166,13 +166,13 @@
 </head>
 <body>
 <div class="container">
-    <!-- 头部只有按钮 -->
+
     <div class="header">
         <button class="btn btn-primary" id="btnShuffle">开始排座</button>
         <button class="btn btn-reset" id="btnReset">重置</button>
     </div>
 
-    <!-- 教室 -->
+ 
     <div class="classroom">
         <div class="seat-grid" id="seatGrid"></div>
         <div class="teacher-row">
@@ -183,7 +183,7 @@
 </div>
 
 <script>
-    // ===================== 配置 =====================
+
     const TOTAL = 51;
     const FIXED = {
         13: { row: 5, col: 5 },
@@ -204,14 +204,14 @@
         })
     );
 
-    // ===================== 状态 =====================
+
     let seats = [];
     let isAnimating = false;
     const gridEl = document.getElementById('seatGrid');
     const btnShuffle = document.getElementById('btnShuffle');
     const btnReset = document.getElementById('btnReset');
 
-    // ===================== 工具 =====================
+
     function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -268,7 +268,6 @@
         return { row: 0, col: 0 };
     }
 
-    // ===================== 核心排座 =====================
     function arrangeSeats() {
         seats = [];
         for (let r = 0; r < ROWS; r++) {
@@ -305,7 +304,7 @@
             else seats[idx].studentId = null;
         }
 
-        // 九宫格交换
+   
         const gridPositions = [];
         for (const g of GROUPS) {
             const grid = pickRandomGrid(gridPositions);
@@ -340,7 +339,7 @@
         renderWithAnimation();
     }
 
-    // ===================== 渲染 + 慢滑绕圈 =====================
+
     function renderWithAnimation() {
         gridEl.innerHTML = '';
         const animItems = [];
@@ -391,7 +390,7 @@
             const span = item.span;
             span.textContent = sid;
 
-            // 随机路径
+
             const rand = (min, max) => Math.random() * (max - min) + min;
             const pts = [];
             for (let i = 0; i < 3; i++) {
@@ -426,7 +425,7 @@
         }
     }
 
-    // ===================== 重置 =====================
+
     function resetSeats() {
         gridEl.innerHTML = '';
         for (let r = 0; r < ROWS; r++) {
@@ -469,7 +468,7 @@
         }
     }
 
-    // ===================== 事件 =====================
+
     btnShuffle.addEventListener('click', () => {
         if (isAnimating) return;
         isAnimating = true;
@@ -485,7 +484,7 @@
         resetSeats();
     });
 
-    // ===================== 启动 =====================
+
     resetSeats();
     console.log('✅ 简洁暗色版加载完成');
 </script>
