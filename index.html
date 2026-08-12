@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班级自动排座系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0b0d14;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 10px;
+    }
+
+    .btn-container {
+      margin-bottom: 24px;
+    }
+
+    .start-btn {
+      background-color: #22c55e;
+      color: white;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .start-btn:hover { background-color: #16a34a; transform: scale(1.03); }
+    .start-btn:disabled { background-color: #4b5563; cursor: not-allowed; opacity: 0.7; }
+
+    .classroom-card {
+      background-color: #121622;
+      border: 1px solid #1e2638;
+      border-radius: 16px;
+      padding: 28px 20px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .seating-grid {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .group-2col { grid-template-columns: repeat(2, 1fr); }
+    .group-3col { grid-template-columns: repeat(3, 1fr); }
+
+    .seat {
+      width: 40px;
+      height: 40px;
+      background-color: #ffffff;
+      color: #111111;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      user-select: none;
+    }
+
+    .teacher-desk {
+      background-color: #53332a;
+      color: #d19a86;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 10px 18px;
+      border-radius: 6px;
+      width: fit-content;
+      margin-top: 24px;
+      border: 1px solid #6e4236;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="btn-container">
+    <button class="start-btn" id="startBtn" onclick="startShuffle()">开始排座</button>
+  </div>
+
+  <div class="classroom-card">
+    <div class="seating-grid">
+      <div class="group group-2col" id="g1"></div>
+      <div class="group group-3col" id="g2"></div>
+      <div class="group group-2col" id="g3"></div>
+      <div class="group group-2col" id="g4"></div>
+    </div>
+    <div class="teacher-desk">老师座位</div>
+  </div>
+
+  <script>
+    const TOTAL_SEATS = 51; 
+    const GROUP_SIZES = [12, 18, 12, 9]; 
+
+    // ================= 后门配置区 =================
+    // 1. 绑定的座号（VIP 4人）
+    const VIP_NUMBERS = [39, 38, 28, 31]; 
+
+    // 2. 跨走廊 3x3 九宫格区域（包含 9 个物理座位编号）
+    const AREA_3X3_POSITIONS = [39, 38, 31, 40, 28, 25, 48, 37, 26]; 
+    // ==============================================
+
+    function getOriginalSeats() {
+      return Array.from({ length: TOTAL_SEATS }, (_, i) => i + 1);
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // 暗箱计算：从 3x3 的 9 个格子中随机抽取 4 个安插 VIP 号码，其余随机填充
+    function generateRiggedSeats(baseSeats) {
+      const normalSeats = baseSeats.filter(num => !VIP_NUMBERS.includes(num));
+      const shuffledNormal = shuffle(normalSeats);
+      const shuffledVip = shuffle(VIP_NUMBERS);
+
+      // 随机打乱 9 个九宫格格子，取前 4 个分配给 VIP
+      const shuffledArea = shuffle(AREA_3X3_POSITIONS);
+      const vipPositions = shuffledArea.slice(0, VIP_NUMBERS.length);
+
+      const finalSeats = new Array(TOTAL_SEATS);
+
+      vipPositions.forEach((posIndex, idx) => {
+        finalSeats[posIndex] = shuffledVip[idx];
+      });
+
+      let normalIdx = 0;
+      for (let i = 0; i < TOTAL_SEATS; i++) {
+        if (finalSeats[i] === undefined) {
+          finalSeats[i] = shuffledNormal[normalIdx++];
+        }
+      }
+      return finalSeats;
+    }
+
+    function renderSeats(seatList) {
+      let currentIndex = 0;
+      GROUP_SIZES.forEach((size, groupIdx) => {
+        const groupEl = document.getElementById(`g${groupIdx + 1}`);
+        groupEl.innerHTML = '';
+        for (let i = 0; i < size; i++) {
+          if (currentIndex < seatList.length) {
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'seat';
+            seatDiv.textContent = seatList[currentIndex];
+            groupEl.appendChild(seatDiv);
+            currentIndex++;
+          }
+        }
+      });
+    }
+
+    function startShuffle() {
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true;
+      let count = 0;
+      const baseSeats = getOriginalSeats();
+
+      // 过程动画：全真实随机滚动
+      const timer = setInterval(() => {
+        renderSeats(shuffle(baseSeats));
+        count++;
+        if (count > 25) { 
+          clearInterval(timer);
+          // 定格瞬间：触发暗箱逻辑
+          renderSeats(generateRiggedSeats(baseSeats));
+          btn.disabled = false;
+        }
+      }, 40);
+    }
+
+    // 初始渲染
+    renderSeats(getOriginalSeats());
+  </script>
+</body>
+</html>
