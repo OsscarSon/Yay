@@ -1,235 +1,544 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>班级自动排座系统</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0b0d14;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px 10px;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>座位抽签 · 慢滑绕圈</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #1e2a3a;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #f0f4f8;
+            border-radius: 40px;
+            padding: 30px 35px 40px;
+            max-width: 1100px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0b1a2b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 small { font-size: 16px; font-weight: 400; color: #4a5f73; }
+        .header-actions { display: flex; gap: 12px; }
+        .btn {
+            background: #1e2a3a;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 10px 28px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn:hover { transform: translateY(-2px); background: #2c3e55; }
+        .btn-primary { background: #1e7e6c; }
+        .btn-primary:hover { background: #259d87; }
+        .btn-reset { background: #7f5a4b; }
+        .btn-reset:hover { background: #9d7160; }
 
-    .btn-container {
-      margin-bottom: 24px;
-    }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 28px;
+            padding: 12px 18px;
+            background: #e4eaef;
+            border-radius: 30px;
+            margin-bottom: 22px;
+            font-size: 14px;
+            font-weight: 500;
+            align-items: center;
+            color: #1a2a3a;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot {
+            width: 20px; height: 20px; border-radius: 6px;
+            display: inline-block; border: 1px solid rgba(0,0,0,0.1);
+        }
+        .legend-dot.normal { background: #cdd8e3; }
+        .legend-dot.teacher { background: #b07c5a; }
 
-    .start-btn {
-      background-color: #22c55e;
-      color: white;
-      border: none;
-      padding: 10px 28px;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-      transition: all 0.2s ease;
-    }
+        .classroom {
+            background: #dce4ec;
+            border-radius: 24px;
+            padding: 20px 18px 10px;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.08);
+            border: 2px solid #b7c4d1;
+        }
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        .teacher-row {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .teacher-cell {
+            grid-column: 1 / 3;
+            background: #b07c5a;
+            border-radius: 12px;
+            padding: 10px 0;
+            text-align: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            border: 3px solid #8b6345;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+        }
+        .teacher-cell span {
+            background: rgba(0,0,0,0.15);
+            padding: 2px 16px;
+            border-radius: 30px;
+        }
+        .teacher-row .empty-cell { background: transparent; border: none; }
 
-    .start-btn:hover { background-color: #16a34a; transform: scale(1.03); }
-    .start-btn:disabled { background-color: #4b5563; cursor: not-allowed; opacity: 0.7; }
+        /* 座位格子：始终显示背景和边框 */
+        .seat {
+            aspect-ratio: 1 / 1.05;
+            background: #cdd8e3;
+            border-radius: 10px;
+            border: 2px solid #b4c1cd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            min-height: 48px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* 走廊和空座位（实际上无空位） */
+        .seat.aisle {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .seat .number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #12202f;
+            opacity: 0;
+            transform: translateY(60px);
+            transition: none; /* 由JS动画控制 */
+            display: block;
+            line-height: 1;
+        }
+        .seat.fixed .number {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+        .seat.empty .number {
+            display: none;
+        }
 
-    .classroom-card {
-      background-color: #121622;
-      border: 1px solid #1e2638;
-      border-radius: 16px;
-      padding: 28px 20px 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      max-width: 100%;
-      overflow-x: auto;
-    }
+        .footer-note {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: #4f6379;
+            font-weight: 500;
+        }
+        .footer-note span { background: #dce4ec; padding: 2px 12px; border-radius: 30px; }
 
-    .seating-grid {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 280px;
-    }
-
-    .group {
-      display: grid;
-      gap: 10px;
-    }
-
-    .group-2col { grid-template-columns: repeat(2, 1fr); }
-    .group-3col { grid-template-columns: repeat(3, 1fr); }
-
-    .seat {
-      width: 40px;
-      height: 40px;
-      background-color: #ffffff;
-      color: #111111;
-      font-size: 16px;
-      font-weight: 700;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-      user-select: none;
-    }
-
-    .teacher-desk {
-      background-color: #53332a;
-      color: #d19a86;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 10px 18px;
-      border-radius: 6px;
-      width: fit-content;
-      margin-top: 24px;
-      border: 1px solid #6e4236;
-    }
-  </style>
+        @media (max-width: 780px) {
+            .container { padding: 18px 14px 24px; }
+            .seat { min-height: 36px; }
+            .seat .number { font-size: 12px; }
+            .header h1 { font-size: 20px; }
+            .btn { font-size: 13px; padding: 8px 18px; }
+            .teacher-cell { font-size: 14px; padding: 6px 0; }
+        }
+        @media (max-width: 550px) {
+            .seat { min-height: 28px; }
+            .seat .number { font-size: 10px; }
+            .seat-grid { gap: 2px; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header-actions { justify-content: center; }
+            .legend { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .teacher-cell { font-size: 12px; }
+        }
+    </style>
 </head>
 <body>
-
-  <div class="btn-container">
-    <button class="start-btn" id="startBtn" onclick="startShuffle()">开始排座</button>
-  </div>
-
-  <div class="classroom-card">
-    <div class="seating-grid">
-      <div class="group group-2col" id="g1"></div>
-      <div class="group group-3col" id="g2"></div>
-      <div class="group group-2col" id="g3"></div>
-      <div class="group group-2col" id="g4"></div>
+<div class="container">
+    <div class="header">
+        <h1>🪑 座位抽签 <small>51人 · 2-3-2-2</small></h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" id="btnShuffle">🎲 开始排座</button>
+            <button class="btn btn-reset" id="btnReset">⟳ 重置</button>
+        </div>
     </div>
-    <div class="teacher-desk">老师座位</div>
-  </div>
 
-  <script>
-    const TOTAL_SEATS = 51; 
-    const GROUP_SIZES = [12, 18, 12, 9]; 
+    <div class="legend">
+        <span class="legend-item"><span class="legend-dot normal"></span> 普通座位</span>
+        <span class="legend-item"><span class="legend-dot teacher"></span> 老师座位</span>
+        <span style="margin-left:auto; opacity:0.7;">🌀 慢滑绕圈 · 13/17固定</span>
+    </div>
 
-    // 1. 死锁固定座位 (位置索引 : 座号)
-    const FIXED_LOCKS = {
-      10: 17, // 第一组最左下角固定 17 号
-      29: 13  // 第二组最右下角固定 13 号
+    <div class="classroom">
+        <div class="seat-grid" id="seatGrid"></div>
+        <div class="teacher-row">
+            <div class="teacher-cell"><span>👨‍🏫 老师</span></div>
+            <div class="empty-cell" style="grid-column: 3 / 13;"></div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <span>📌 13号（最后一行中间最右）· 17号（老师前方） &nbsp;｜&nbsp; 三组九宫格随机位置 · 内部乱序</span>
+    </div>
+</div>
+
+<script>
+    // ===================== 配置 =====================
+    const TOTAL = 51;
+    const FIXED = {
+        13: { row: 5, col: 5 },
+        17: { row: 5, col: 0 }
     };
+    const GROUPS = [
+        { students: [39, 38, 28, 31], label: 'A' },
+        { students: [23, 41, 20, 35], label: 'B' },
+        { students: [34, 24, 7, 1], label: 'C' }
+    ];
 
-    // 2. 3x3 九宫格绑定的 4 人组 (学号)
-    const VIP_NUMBERS = [39, 38, 28, 31]; 
+    const ROWS = 6, COLS = 12;
+    const SEAT_MAP = Array.from({ length: ROWS }, (_, r) =>
+        Array.from({ length: COLS }, (_, c) => {
+            if (c === 2 || c === 6 || c === 9) return false;
+            if (r === 0 && (c === 3 || c === 4 || c === 5)) return false;
+            return true;
+        })
+    );
 
-    // 3x3 九宫格物理座位索引
-    const AREA_3X3_POSITIONS = [3, 15, 16, 5, 18, 19, 7, 21, 22]; 
+    // ===================== 状态 =====================
+    let seats = [];
+    let isAnimating = false;
+    const gridEl = document.getElementById('seatGrid');
+    const btnShuffle = document.getElementById('btnShuffle');
+    const btnReset = document.getElementById('btnReset');
 
-    function getOriginalSeats() {
-      const arr = [];
-      for (let i = 1; i <= TOTAL_SEATS; i++) {
-        arr.push(i);
-      }
-      return arr;
-    }
-
-    function shuffle(array) {
-      const arr = array.slice();
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-      }
-      return arr;
-    }
-
-    function generateRiggedSeats(baseSeats) {
-      const fixedNums = [];
-      for (const key in FIXED_LOCKS) {
-        fixedNums.push(FIXED_LOCKS[key]);
-      }
-
-      const normalSeats = baseSeats.filter(function(num) {
-        return VIP_NUMBERS.indexOf(num) === -1 && fixedNums.indexOf(num) === -1;
-      });
-
-      const shuffledNormal = shuffle(normalSeats);
-      const shuffledVip = shuffle(VIP_NUMBERS);
-      const finalSeats = new Array(TOTAL_SEATS);
-
-      // 第一步：写入死锁座位
-      for (const posIndex in FIXED_LOCKS) {
-        finalSeats[Number(posIndex)] = FIXED_LOCKS[posIndex];
-      }
-
-      // 第二步：九宫格放置 VIP
-      const shuffledArea = shuffle(AREA_3X3_POSITIONS);
-      for (let i = 0; i < VIP_NUMBERS.length; i++) {
-        const posIndex = shuffledArea[i];
-        finalSeats[posIndex] = shuffledVip[i];
-      }
-
-      // 第三步：填充普通号码
-      let normalIdx = 0;
-      for (let i = 0; i < TOTAL_SEATS; i++) {
-        if (finalSeats[i] === undefined) {
-          finalSeats[i] = shuffledNormal[normalIdx++];
+    // ===================== 工具 =====================
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
         }
-      }
-      return finalSeats;
+        return arr;
     }
-
-    function renderSeats(seatList) {
-      for (let groupIdx = 0; groupIdx < GROUP_SIZES.length; groupIdx++) {
-        const groupEl = document.getElementById('g' + (groupIdx + 1));
-        if (groupEl) groupEl.innerHTML = '';
-      }
-
-      let currentIndex = 0;
-      for (let groupIdx = 0; groupIdx < GROUP_SIZES.length; groupIdx++) {
-        const size = GROUP_SIZES[groupIdx];
-        const groupEl = document.getElementById('g' + (groupIdx + 1));
-        if (!groupEl) continue;
-
-        for (let i = 0; i < size; i++) {
-          if (currentIndex < seatList.length) {
-            const seatDiv = document.createElement('div');
-            seatDiv.className = 'seat';
-            seatDiv.textContent = seatList[currentIndex];
-            groupEl.appendChild(seatDiv);
-            currentIndex++;
-          }
+    function getSeatIndex(row, col) { return row * COLS + col; }
+    function getGridSeats(gridRow, gridCol) {
+        const coords = [];
+        for (let dr = 0; dr < 3; dr++) {
+            for (let dc = 0; dc < 3; dc++) {
+                const r = gridRow + dr, c = gridCol + dc;
+                if (r < ROWS && c < COLS && SEAT_MAP[r][c]) coords.push({ row: r, col: c });
+            }
         }
-      }
+        return coords;
     }
-
-    function startShuffle() {
-      const btn = document.getElementById('startBtn');
-      if (btn) btn.disabled = true;
-      let count = 0;
-      const baseSeats = getOriginalSeats();
-
-      const timer = setInterval(function() {
-        renderSeats(shuffle(baseSeats));
-        count++;
-        if (count > 25) { 
-          clearInterval(timer);
-          renderSeats(generateRiggedSeats(baseSeats));
-          if (btn) btn.disabled = false;
+    function containsFixed(gridRow, gridCol) {
+        const seats = getGridSeats(gridRow, gridCol);
+        for (const pos of seats) {
+            for (const [id, fixed] of Object.entries(FIXED)) {
+                if (pos.row === fixed.row && pos.col === fixed.col) return true;
+            }
         }
-      }, 40);
+        return false;
+    }
+    function gridsOverlap(g1, g2) {
+        const s1 = getGridSeats(g1.row, g1.col);
+        const s2 = getGridSeats(g2.row, g2.col);
+        for (const a of s1) for (const b of s2) {
+            if (a.row === b.row && a.col === b.col) return true;
+        }
+        return false;
+    }
+    function pickRandomGrid(existing, maxAttempts = 300) {
+        for (let i = 0; i < maxAttempts; i++) {
+            const r = Math.floor(Math.random() * (ROWS - 2));
+            const c = Math.floor(Math.random() * (COLS - 2));
+            if (containsFixed(r, c)) continue;
+            if (getGridSeats(r, c).length < 4) continue;
+            const candidate = { row: r, col: c };
+            let ok = true;
+            for (const ex of existing) if (gridsOverlap(candidate, ex)) { ok = false; break; }
+            if (ok) return candidate;
+        }
+        for (let r = 0; r < ROWS - 2; r++) for (let c = 0; c < COLS - 2; c++) {
+            if (!containsFixed(r, c) && getGridSeats(r, c).length >= 4) {
+                let ok = true;
+                for (const ex of existing) if (gridsOverlap({ row: r, col: c }, ex)) { ok = false; break; }
+                if (ok) return { row: r, col: c };
+            }
+        }
+        return { row: 0, col: 0 };
     }
 
-    // 确保网页准备完毕后立即渲染
-    function init() {
-      renderSeats(getOriginalSeats());
+    // ===================== 核心排座 =====================
+    function arrangeSeats() {
+        // 填充座位数据（不含固定）
+        seats = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                seats.push({
+                    row: r, col: c,
+                    studentId: null,
+                    isSeat: SEAT_MAP[r][c],
+                    fixed: false,
+                    group: null,
+                });
+            }
+        }
+        for (const [id, pos] of Object.entries(FIXED)) {
+            const idx = getSeatIndex(pos.row, pos.col);
+            if (seats[idx].isSeat) {
+                seats[idx].studentId = parseInt(id);
+                seats[idx].fixed = true;
+            }
+        }
+        const available = [];
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+            const idx = getSeatIndex(r, c);
+            if (seats[idx].isSeat && !seats[idx].fixed) available.push({ row: r, col: c });
+        }
+        shuffle(available);
+        const students = [];
+        for (let i = 1; i <= TOTAL; i++) if (!FIXED[i]) students.push(i);
+        shuffle(students);
+        for (let i = 0; i < available.length; i++) {
+            const pos = available[i];
+            const idx = getSeatIndex(pos.row, pos.col);
+            if (i < students.length) seats[idx].studentId = students[i];
+            else seats[idx].studentId = null;
+        }
+
+        // 九宫格交换
+        const gridPositions = [];
+        for (const g of GROUPS) {
+            const grid = pickRandomGrid(gridPositions);
+            gridPositions.push(grid);
+            const gridSeats = getGridSeats(grid.row, grid.col);
+            const shuffledGridSeats = shuffle([...gridSeats]);
+            const targetSeats = shuffledGridSeats.slice(0, 4);
+            const groupStudents = g.students;
+            const originSeats = [];
+            for (const sid of groupStudents) {
+                let found = null;
+                for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+                    const idx = getSeatIndex(r, c);
+                    if (seats[idx].studentId === sid) { found = { row: r, col: c }; break; }
+                }
+                if (found) originSeats.push(found);
+            }
+            for (let i = 0; i < groupStudents.length; i++) {
+                const origin = originSeats[i];
+                const target = targetSeats[i];
+                if (!origin || !target) continue;
+                const originIdx = getSeatIndex(origin.row, origin.col);
+                const targetIdx = getSeatIndex(target.row, target.col);
+                const temp = seats[targetIdx].studentId;
+                seats[targetIdx].studentId = seats[originIdx].studentId;
+                seats[originIdx].studentId = temp;
+                seats[targetIdx].group = g.label;
+                seats[originIdx].group = null;
+            }
+        }
+
+        renderWithAnimation();
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
+    // ===================== 渲染 + 慢滑绕圈动画 =====================
+    function renderWithAnimation() {
+        gridEl.innerHTML = '';
+        // 收集所有需要动画的座位元素（非固定有学生）
+        const animItems = [];
+
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const idx = getSeatIndex(r, c);
+                const data = seats[idx];
+                const div = document.createElement('div');
+                div.className = 'seat';
+                if (!data.isSeat) {
+                    div.classList.add('aisle');
+                    gridEl.appendChild(div);
+                    continue;
+                }
+
+                // 创建数字span
+                const span = document.createElement('span');
+                span.className = 'number';
+                if (data.fixed) {
+                    // 固定座位直接显示数字，无动画
+                    span.textContent = data.studentId;
+                    span.style.opacity = '1';
+                    span.style.transform = 'translateY(0)';
+                    div.classList.add('fixed');
+                } else if (data.studentId !== null) {
+                    // 非固定有学生：先空，稍后动画
+                    span.textContent = ''; // 先空白
+                    span.dataset.studentId = data.studentId;
+                    // 初始状态透明且位于下方
+                    span.style.opacity = '0';
+                    span.style.transform = 'translateY(60px)';
+                    animItems.push({ div, span, studentId: data.studentId });
+                } else {
+                    // 空座位（理论上没有）
+                    span.textContent = '';
+                    span.style.opacity = '0';
+                    div.classList.add('empty');
+                }
+                div.appendChild(span);
+                gridEl.appendChild(div);
+            }
+        }
+
+        // 打乱顺序，让入场顺序随机
+        shuffle(animItems);
+
+        // 为每个数字生成随机路径并启动动画
+        let delay = 0;
+        const step = 250; // 每个延迟间隔（ms）
+        const duration = 2800; // 动画总时长（ms）
+
+        for (const item of animItems) {
+            const sid = item.studentId;
+            const span = item.span;
+            // 设置数字
+            span.textContent = sid;
+
+            // 生成随机关键帧偏移（每个轴3个随机点）
+            const rand = (min, max) => Math.random() * (max - min) + min;
+            const points = [];
+            for (let i = 0; i < 3; i++) {
+                points.push({
+                    tx: rand(-80, 80),
+                    ty: rand(-60, 60),
+                    rot: rand(-25, 25)
+                });
+            }
+            // 构建关键帧数组
+            const keyframes = [
+                { transform: 'translateY(60px) translateX(0) rotate(0deg)', opacity: 0 },
+                { transform: `translateY(${points[0].ty}px) translateX(${points[0].tx}px) rotate(${points[0].rot}deg)`, opacity: 1 },
+                { transform: `translateY(${points[1].ty}px) translateX(${points[1].tx}px) rotate(${points[1].rot}deg)`, opacity: 1 },
+                { transform: `translateY(${points[2].ty}px) translateX(${points[2].tx}px) rotate(${points[2].rot}deg)`, opacity: 1 },
+                { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 }
+            ];
+            // 时间分配（不均匀，增加随机感）
+            const times = [0, 0.25, 0.5, 0.75, 1];
+            const options = {
+                duration: duration,
+                delay: delay,
+                easing: 'ease-in-out',
+                fill: 'forwards'
+            };
+            // 使用Web Animations API
+            const anim = span.animate(keyframes, options);
+            // 动画结束后，清除动画样式，保留最终状态
+            anim.onfinish = () => {
+                span.style.opacity = '1';
+                span.style.transform = 'translateY(0)';
+                span.style.animation = 'none';
+            };
+
+            delay += step;
+        }
     }
-  </script>
+
+    // ===================== 重置 =====================
+    function resetSeats() {
+        // 清空并显示所有空座位（格子保留，数字隐藏）
+        gridEl.innerHTML = '';
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const isSeat = SEAT_MAP[r][c];
+                const div = document.createElement('div');
+                div.className = 'seat';
+                if (!isSeat) {
+                    div.classList.add('aisle');
+                    gridEl.appendChild(div);
+                    continue;
+                }
+                const span = document.createElement('span');
+                span.className = 'number';
+                // 检查是否固定
+                let fixedId = null;
+                for (const [id, pos] of Object.entries(FIXED)) {
+                    if (pos.row === r && pos.col === c) fixedId = parseInt(id);
+                }
+                if (fixedId !== null) {
+                    span.textContent = fixedId;
+                    span.style.opacity = '1';
+                    span.style.transform = 'translateY(0)';
+                    div.classList.add('fixed');
+                } else {
+                    span.textContent = '';
+                    span.style.opacity = '0';
+                    span.style.transform = 'translateY(60px)';
+                }
+                div.appendChild(span);
+                gridEl.appendChild(div);
+            }
+        }
+        // 重置数据
+        seats = [];
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+            seats.push({ row: r, col: c, studentId: null, isSeat: SEAT_MAP[r][c], fixed: false, group: null });
+        }
+        for (const [id, pos] of Object.entries(FIXED)) {
+            const idx = getSeatIndex(pos.row, pos.col);
+            if (seats[idx].isSeat) { seats[idx].studentId = parseInt(id); seats[idx].fixed = true; }
+        }
+    }
+
+    // ===================== 事件 =====================
+    btnShuffle.addEventListener('click', () => {
+        if (isAnimating) return;
+        isAnimating = true;
+        // 先重置（显示格子，固定数字可见）
+        resetSeats();
+        // 延迟一下再排座并动画
+        setTimeout(() => {
+            arrangeSeats();
+            // 动画完成后解锁
+            setTimeout(() => { isAnimating = false; }, 5500); // 比总动画时长稍长
+        }, 300);
+    });
+
+    btnReset.addEventListener('click', () => {
+        if (isAnimating) return;
+        resetSeats();
+    });
+
+    // ===================== 启动 =====================
+    resetSeats();
+    console.log('✅ 慢滑绕圈版加载完成。');
+</script>
 </body>
 </html>
