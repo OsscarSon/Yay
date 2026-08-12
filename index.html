@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>座位抽签 · 慢滑绕圈</title>
+    <title>座位抽签</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* ========== 暗色简洁主题 ========== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            background: #1e2a3a;
+            background: #121212;
             font-family: 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -16,200 +21,164 @@
             padding: 20px;
         }
         .container {
-            background: #f0f4f8;
-            border-radius: 40px;
-            padding: 30px 35px 40px;
+            background: #1e1e1e;
+            border-radius: 28px;
+            padding: 24px 30px 30px;
             max-width: 1100px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
         }
+
+        /* 头部：仅按钮 */
         .header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 22px;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-bottom: 18px;
         }
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #0b1a2b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header h1 small { font-size: 16px; font-weight: 400; color: #4a5f73; }
-        .header-actions { display: flex; gap: 12px; }
         .btn {
-            background: #1e2a3a;
+            background: #2a2a2a;
             border: none;
-            color: #fff;
-            font-size: 16px;
+            color: #ddd;
+            font-size: 15px;
             font-weight: 600;
-            padding: 10px 28px;
-            border-radius: 60px;
+            padding: 8px 24px;
+            border-radius: 40px;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #444;
         }
-        .btn:hover { transform: translateY(-2px); background: #2c3e55; }
-        .btn-primary { background: #1e7e6c; }
-        .btn-primary:hover { background: #259d87; }
-        .btn-reset { background: #7f5a4b; }
-        .btn-reset:hover { background: #9d7160; }
+        .btn:hover {
+            background: #3a3a3a;
+            color: #fff;
+            border-color: #666;
+        }
+        .btn-primary {
+            background: #3a6b5c;
+            border-color: #4a8a77;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #4a8a77;
+        }
+        .btn-reset {
+            background: #3a2a2a;
+            border-color: #5a3a3a;
+            color: #ccc;
+        }
+        .btn-reset:hover {
+            background: #5a3a3a;
+        }
 
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px 28px;
-            padding: 12px 18px;
-            background: #e4eaef;
-            border-radius: 30px;
-            margin-bottom: 22px;
-            font-size: 14px;
-            font-weight: 500;
-            align-items: center;
-            color: #1a2a3a;
-        }
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .legend-dot {
-            width: 20px; height: 20px; border-radius: 6px;
-            display: inline-block; border: 1px solid rgba(0,0,0,0.1);
-        }
-        .legend-dot.normal { background: #cdd8e3; }
-        .legend-dot.teacher { background: #b07c5a; }
-
+        /* 教室区域 */
         .classroom {
-            background: #dce4ec;
-            border-radius: 24px;
-            padding: 20px 18px 10px;
-            box-shadow: inset 0 4px 12px rgba(0,0,0,0.08);
-            border: 2px solid #b7c4d1;
+            background: #252525;
+            border-radius: 20px;
+            padding: 16px 14px 10px;
+            border: 1px solid #3a3a3a;
         }
         .seat-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 4px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
+
+        /* 老师座位（底部） */
         .teacher-row {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 4px;
-            margin-top: 4px;
+            margin-top: 2px;
         }
         .teacher-cell {
             grid-column: 1 / 3;
-            background: #b07c5a;
-            border-radius: 12px;
-            padding: 10px 0;
+            background: #2d2d2d;
+            border-radius: 10px;
+            padding: 8px 0;
             text-align: center;
-            color: #fff;
-            font-weight: 700;
-            font-size: 18px;
-            border: 3px solid #8b6345;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
-            letter-spacing: 2px;
+            color: #aaa;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 1px;
+            border: 1px solid #444;
         }
-        .teacher-cell span {
-            background: rgba(0,0,0,0.15);
-            padding: 2px 16px;
-            border-radius: 30px;
+        .teacher-row .empty-cell {
+            background: transparent;
+            border: none;
         }
-        .teacher-row .empty-cell { background: transparent; border: none; }
 
-        /* 座位格子：始终显示背景和边框 */
+        /* 座位格子 */
         .seat {
             aspect-ratio: 1 / 1.05;
-            background: #cdd8e3;
-            border-radius: 10px;
-            border: 2px solid #b4c1cd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            min-height: 48px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #3d3d3d;
+            min-height: 44px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        /* 走廊和空座位（实际上无空位） */
         .seat.aisle {
             background: transparent !important;
             border: none !important;
-            box-shadow: none !important;
         }
         .seat .number {
-            font-size: 15px;
-            font-weight: 700;
-            color: #12202f;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
             opacity: 0;
-            transform: translateY(60px);
-            transition: none; /* 由JS动画控制 */
+            transform: translateY(50px);
             display: block;
             line-height: 1;
         }
         .seat.fixed .number {
             opacity: 1 !important;
             transform: translateY(0) !important;
+            color: #e0e0e0;
         }
         .seat.empty .number {
             display: none;
         }
 
-        .footer-note {
-            margin-top: 16px;
-            text-align: center;
-            font-size: 13px;
-            color: #4f6379;
-            font-weight: 500;
+        /* 动画时确保格子背景可见 */
+        .seat .number.animating {
+            /* 动画由JS控制 */
         }
-        .footer-note span { background: #dce4ec; padding: 2px 12px; border-radius: 30px; }
 
         @media (max-width: 780px) {
-            .container { padding: 18px 14px 24px; }
-            .seat { min-height: 36px; }
+            .container { padding: 16px 14px 20px; }
+            .seat { min-height: 34px; }
             .seat .number { font-size: 12px; }
-            .header h1 { font-size: 20px; }
-            .btn { font-size: 13px; padding: 8px 18px; }
-            .teacher-cell { font-size: 14px; padding: 6px 0; }
+            .btn { font-size: 13px; padding: 6px 18px; }
+            .teacher-cell { font-size: 13px; padding: 6px 0; }
         }
         @media (max-width: 550px) {
-            .seat { min-height: 28px; }
+            .seat { min-height: 26px; }
             .seat .number { font-size: 10px; }
             .seat-grid { gap: 2px; }
-            .header { flex-direction: column; align-items: stretch; }
-            .header-actions { justify-content: center; }
-            .legend { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .header { justify-content: center; }
             .teacher-cell { font-size: 12px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
+    <!-- 头部只有按钮 -->
     <div class="header">
-        <h1>🪑 座位抽签 <small>51人 · 2-3-2-2</small></h1>
-        <div class="header-actions">
-            <button class="btn btn-primary" id="btnShuffle">🎲 开始排座</button>
-            <button class="btn btn-reset" id="btnReset">⟳ 重置</button>
-        </div>
+        <button class="btn btn-primary" id="btnShuffle">开始排座</button>
+        <button class="btn btn-reset" id="btnReset">重置</button>
     </div>
 
-    <div class="legend">
-        <span class="legend-item"><span class="legend-dot normal"></span> 普通座位</span>
-        <span class="legend-item"><span class="legend-dot teacher"></span> 老师座位</span>
-        <span style="margin-left:auto; opacity:0.7;">🌀 慢滑绕圈 · 13/17固定</span>
-    </div>
-
+    <!-- 教室 -->
     <div class="classroom">
         <div class="seat-grid" id="seatGrid"></div>
         <div class="teacher-row">
-            <div class="teacher-cell"><span>👨‍🏫 老师</span></div>
+            <div class="teacher-cell">老师座位</div>
             <div class="empty-cell" style="grid-column: 3 / 13;"></div>
         </div>
-    </div>
-
-    <div class="footer-note">
-        <span>📌 13号（最后一行中间最右）· 17号（老师前方） &nbsp;｜&nbsp; 三组九宫格随机位置 · 内部乱序</span>
     </div>
 </div>
 
@@ -221,7 +190,7 @@
         17: { row: 5, col: 0 }
     };
     const GROUPS = [
-        { students: [39, 38, 28, 31], label: 'A' },
+        { students: [39, 38, 28, 31, 40, 48], label: 'A' },
         { students: [23, 41, 20, 35], label: 'B' },
         { students: [34, 24, 7, 1], label: 'C' }
     ];
@@ -301,7 +270,6 @@
 
     // ===================== 核心排座 =====================
     function arrangeSeats() {
-        // 填充座位数据（不含固定）
         seats = [];
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
@@ -372,10 +340,9 @@
         renderWithAnimation();
     }
 
-    // ===================== 渲染 + 慢滑绕圈动画 =====================
+    // ===================== 渲染 + 慢滑绕圈 =====================
     function renderWithAnimation() {
         gridEl.innerHTML = '';
-        // 收集所有需要动画的座位元素（非固定有学生）
         const animItems = [];
 
         for (let r = 0; r < ROWS; r++) {
@@ -390,25 +357,20 @@
                     continue;
                 }
 
-                // 创建数字span
                 const span = document.createElement('span');
                 span.className = 'number';
                 if (data.fixed) {
-                    // 固定座位直接显示数字，无动画
                     span.textContent = data.studentId;
                     span.style.opacity = '1';
                     span.style.transform = 'translateY(0)';
                     div.classList.add('fixed');
                 } else if (data.studentId !== null) {
-                    // 非固定有学生：先空，稍后动画
-                    span.textContent = ''; // 先空白
+                    span.textContent = '';
                     span.dataset.studentId = data.studentId;
-                    // 初始状态透明且位于下方
                     span.style.opacity = '0';
-                    span.style.transform = 'translateY(60px)';
+                    span.style.transform = 'translateY(50px)';
                     animItems.push({ div, span, studentId: data.studentId });
                 } else {
-                    // 空座位（理论上没有）
                     span.textContent = '';
                     span.style.opacity = '0';
                     div.classList.add('empty');
@@ -418,39 +380,34 @@
             }
         }
 
-        // 打乱顺序，让入场顺序随机
         shuffle(animItems);
 
-        // 为每个数字生成随机路径并启动动画
         let delay = 0;
-        const step = 250; // 每个延迟间隔（ms）
-        const duration = 2800; // 动画总时长（ms）
+        const step = 250;
+        const duration = 2800;
 
         for (const item of animItems) {
             const sid = item.studentId;
             const span = item.span;
-            // 设置数字
             span.textContent = sid;
 
-            // 生成随机关键帧偏移（每个轴3个随机点）
+            // 随机路径
             const rand = (min, max) => Math.random() * (max - min) + min;
-            const points = [];
+            const pts = [];
             for (let i = 0; i < 3; i++) {
-                points.push({
+                pts.push({
                     tx: rand(-80, 80),
                     ty: rand(-60, 60),
                     rot: rand(-25, 25)
                 });
             }
-            // 构建关键帧数组
             const keyframes = [
-                { transform: 'translateY(60px) translateX(0) rotate(0deg)', opacity: 0 },
-                { transform: `translateY(${points[0].ty}px) translateX(${points[0].tx}px) rotate(${points[0].rot}deg)`, opacity: 1 },
-                { transform: `translateY(${points[1].ty}px) translateX(${points[1].tx}px) rotate(${points[1].rot}deg)`, opacity: 1 },
-                { transform: `translateY(${points[2].ty}px) translateX(${points[2].tx}px) rotate(${points[2].rot}deg)`, opacity: 1 },
+                { transform: 'translateY(50px) translateX(0) rotate(0deg)', opacity: 0 },
+                { transform: `translateY(${pts[0].ty}px) translateX(${pts[0].tx}px) rotate(${pts[0].rot}deg)`, opacity: 1 },
+                { transform: `translateY(${pts[1].ty}px) translateX(${pts[1].tx}px) rotate(${pts[1].rot}deg)`, opacity: 1 },
+                { transform: `translateY(${pts[2].ty}px) translateX(${pts[2].tx}px) rotate(${pts[2].rot}deg)`, opacity: 1 },
                 { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 }
             ];
-            // 时间分配（不均匀，增加随机感）
             const times = [0, 0.25, 0.5, 0.75, 1];
             const options = {
                 duration: duration,
@@ -458,9 +415,7 @@
                 easing: 'ease-in-out',
                 fill: 'forwards'
             };
-            // 使用Web Animations API
             const anim = span.animate(keyframes, options);
-            // 动画结束后，清除动画样式，保留最终状态
             anim.onfinish = () => {
                 span.style.opacity = '1';
                 span.style.transform = 'translateY(0)';
@@ -473,7 +428,6 @@
 
     // ===================== 重置 =====================
     function resetSeats() {
-        // 清空并显示所有空座位（格子保留，数字隐藏）
         gridEl.innerHTML = '';
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
@@ -487,7 +441,6 @@
                 }
                 const span = document.createElement('span');
                 span.className = 'number';
-                // 检查是否固定
                 let fixedId = null;
                 for (const [id, pos] of Object.entries(FIXED)) {
                     if (pos.row === r && pos.col === c) fixedId = parseInt(id);
@@ -500,13 +453,12 @@
                 } else {
                     span.textContent = '';
                     span.style.opacity = '0';
-                    span.style.transform = 'translateY(60px)';
+                    span.style.transform = 'translateY(50px)';
                 }
                 div.appendChild(span);
                 gridEl.appendChild(div);
             }
         }
-        // 重置数据
         seats = [];
         for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
             seats.push({ row: r, col: c, studentId: null, isSeat: SEAT_MAP[r][c], fixed: false, group: null });
@@ -521,13 +473,10 @@
     btnShuffle.addEventListener('click', () => {
         if (isAnimating) return;
         isAnimating = true;
-        // 先重置（显示格子，固定数字可见）
         resetSeats();
-        // 延迟一下再排座并动画
         setTimeout(() => {
             arrangeSeats();
-            // 动画完成后解锁
-            setTimeout(() => { isAnimating = false; }, 5500); // 比总动画时长稍长
+            setTimeout(() => { isAnimating = false; }, 5500);
         }, 300);
     });
 
@@ -538,7 +487,7 @@
 
     // ===================== 启动 =====================
     resetSeats();
-    console.log('✅ 慢滑绕圈版加载完成。');
+    console.log('✅ 简洁暗色版加载完成');
 </script>
 </body>
 </html>
