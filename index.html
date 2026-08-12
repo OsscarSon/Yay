@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>座位抽签</title>
     <style>
-     
+        /* ========== 暗色简洁主题 ========== */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -30,7 +30,6 @@
             border: 1px solid #333;
         }
 
-       
         .header {
             display: flex;
             justify-content: flex-end;
@@ -71,7 +70,6 @@
             background: #5a3a3a;
         }
 
-        /* 教室区域 */
         .classroom {
             background: #252525;
             border-radius: 20px;
@@ -85,7 +83,6 @@
             margin-bottom: 8px;
         }
 
- 
         .teacher-row {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -108,7 +105,6 @@
             background: transparent;
             border: none;
         }
-
 
         .seat {
             aspect-ratio: 1 / 1.05;
@@ -143,11 +139,6 @@
             display: none;
         }
 
- 
-        .seat .number.animating {
-  
-        }
-
         @media (max-width: 780px) {
             .container { padding: 16px 14px 20px; }
             .seat { min-height: 34px; }
@@ -166,13 +157,11 @@
 </head>
 <body>
 <div class="container">
-
     <div class="header">
         <button class="btn btn-primary" id="btnShuffle">开始排座</button>
         <button class="btn btn-reset" id="btnReset">重置</button>
     </div>
 
- 
     <div class="classroom">
         <div class="seat-grid" id="seatGrid"></div>
         <div class="teacher-row">
@@ -183,12 +172,13 @@
 </div>
 
 <script>
-
+    // ===================== 配置 =====================
     const TOTAL = 51;
     const FIXED = {
         13: { row: 5, col: 5 },
         17: { row: 5, col: 0 }
     };
+    // ===== 在这里修改分组，已加入 40 和 48 到 A 组 =====
     const GROUPS = [
         { students: [39, 38, 28, 31, 40, 48], label: 'A' },
         { students: [23, 41, 20, 35], label: 'B' },
@@ -204,14 +194,14 @@
         })
     );
 
-
+    // ===================== 状态 =====================
     let seats = [];
     let isAnimating = false;
     const gridEl = document.getElementById('seatGrid');
     const btnShuffle = document.getElementById('btnShuffle');
     const btnReset = document.getElementById('btnReset');
 
-
+    // ===================== 工具 =====================
     function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -268,6 +258,7 @@
         return { row: 0, col: 0 };
     }
 
+    // ===================== 核心排座 =====================
     function arrangeSeats() {
         seats = [];
         for (let r = 0; r < ROWS; r++) {
@@ -304,14 +295,14 @@
             else seats[idx].studentId = null;
         }
 
-   
+        // 九宫格交换
         const gridPositions = [];
         for (const g of GROUPS) {
             const grid = pickRandomGrid(gridPositions);
             gridPositions.push(grid);
             const gridSeats = getGridSeats(grid.row, grid.col);
             const shuffledGridSeats = shuffle([...gridSeats]);
-            const targetSeats = shuffledGridSeats.slice(0, 4);
+            const targetSeats = shuffledGridSeats.slice(0, g.students.length);
             const groupStudents = g.students;
             const originSeats = [];
             for (const sid of groupStudents) {
@@ -339,7 +330,7 @@
         renderWithAnimation();
     }
 
-
+    // ===================== 渲染 + 慢滑绕圈 =====================
     function renderWithAnimation() {
         gridEl.innerHTML = '';
         const animItems = [];
@@ -390,7 +381,6 @@
             const span = item.span;
             span.textContent = sid;
 
-
             const rand = (min, max) => Math.random() * (max - min) + min;
             const pts = [];
             for (let i = 0; i < 3; i++) {
@@ -407,7 +397,6 @@
                 { transform: `translateY(${pts[2].ty}px) translateX(${pts[2].tx}px) rotate(${pts[2].rot}deg)`, opacity: 1 },
                 { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 }
             ];
-            const times = [0, 0.25, 0.5, 0.75, 1];
             const options = {
                 duration: duration,
                 delay: delay,
@@ -425,7 +414,7 @@
         }
     }
 
-
+    // ===================== 重置 =====================
     function resetSeats() {
         gridEl.innerHTML = '';
         for (let r = 0; r < ROWS; r++) {
@@ -468,7 +457,7 @@
         }
     }
 
-
+    // ===================== 事件 =====================
     btnShuffle.addEventListener('click', () => {
         if (isAnimating) return;
         isAnimating = true;
@@ -484,9 +473,9 @@
         resetSeats();
     });
 
-
+    // ===================== 启动 =====================
     resetSeats();
-    console.log('✅ 简洁暗色版加载完成');
+    console.log('✅ 已加入 40, 48 到 A 组');
 </script>
 </body>
 </html>
