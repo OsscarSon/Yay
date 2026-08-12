@@ -114,52 +114,60 @@
 
     // 1. 死锁固定座位 (位置索引 : 座号)
     const FIXED_LOCKS = {
-      10: 17, // 第一组最左下角
-      29: 13  // 第二组最右下角
+      10: 17, // 第一组最左下角固定 17 号
+      29: 13  // 第二组最右下角固定 13 号
     };
 
     // 2. 3x3 九宫格绑定的 4 人组 (学号)
     const VIP_NUMBERS = [39, 38, 28, 31]; 
-    const VIP_NUMBERS = [41, 23, 35, 20]; 
-    const VIP_NUMBERS = [34, 7, 24, 1]; 
-    
 
     // 3x3 九宫格物理座位索引
     const AREA_3X3_POSITIONS = [3, 15, 16, 5, 18, 19, 7, 21, 22]; 
 
     function getOriginalSeats() {
-      return Array.from({ length: TOTAL_SEATS }, (_, i) => i + 1);
+      const arr = [];
+      for (let i = 1; i <= TOTAL_SEATS; i++) {
+        arr.push(i);
+      }
+      return arr;
     }
 
     function shuffle(array) {
-      const arr = [...array];
+      const arr = array.slice();
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
       }
       return arr;
     }
 
     function generateRiggedSeats(baseSeats) {
-      const fixedNums = Object.values(FIXED_LOCKS);
-      const normalSeats = baseSeats.filter(num => !VIP_NUMBERS.includes(num) && !fixedNums.includes(num));
+      const fixedNums = [];
+      for (const key in FIXED_LOCKS) {
+        fixedNums.push(FIXED_LOCKS[key]);
+      }
+
+      const normalSeats = baseSeats.filter(function(num) {
+        return VIP_NUMBERS.indexOf(num) === -1 && fixedNums.indexOf(num) === -1;
+      });
+
       const shuffledNormal = shuffle(normalSeats);
       const shuffledVip = shuffle(VIP_NUMBERS);
-
       const finalSeats = new Array(TOTAL_SEATS);
 
       // 第一步：写入死锁座位
-      Object.keys(FIXED_LOCKS).forEach(posIndex => {
+      for (const posIndex in FIXED_LOCKS) {
         finalSeats[Number(posIndex)] = FIXED_LOCKS[posIndex];
-      });
+      }
 
       // 第二步：九宫格放置 VIP
       const shuffledArea = shuffle(AREA_3X3_POSITIONS);
-      const vipPositions = shuffledArea.slice(0, VIP_NUMBERS.length);
-
-      vipPositions.forEach((posIndex, idx) => {
-        finalSeats[posIndex] = shuffledVip[idx];
-      });
+      for (let i = 0; i < VIP_NUMBERS.length; i++) {
+        const posIndex = shuffledArea[i];
+        finalSeats[posIndex] = shuffledVip[i];
+      }
 
       // 第三步：填充普通号码
       let normalIdx = 0;
@@ -172,11 +180,17 @@
     }
 
     function renderSeats(seatList) {
-      let currentIndex = 0;
-      GROUP_SIZES.forEach((size, groupIdx) => {
+      for (let groupIdx = 0; groupIdx < GROUP_SIZES.length; groupIdx++) {
         const groupEl = document.getElementById('g' + (groupIdx + 1));
-        if (!groupEl) return;
-        groupEl.innerHTML = '';
+        if (groupEl) groupEl.innerHTML = '';
+      }
+
+      let currentIndex = 0;
+      for (let groupIdx = 0; groupIdx < GROUP_SIZES.length; groupIdx++) {
+        const size = GROUP_SIZES[groupIdx];
+        const groupEl = document.getElementById('g' + (groupIdx + 1));
+        if (!groupEl) continue;
+
         for (let i = 0; i < size; i++) {
           if (currentIndex < seatList.length) {
             const seatDiv = document.createElement('div');
@@ -186,30 +200,36 @@
             currentIndex++;
           }
         }
-      });
+      }
     }
 
     function startShuffle() {
       const btn = document.getElementById('startBtn');
-      btn.disabled = true;
+      if (btn) btn.disabled = true;
       let count = 0;
       const baseSeats = getOriginalSeats();
 
-      const timer = setInterval(() => {
+      const timer = setInterval(function() {
         renderSeats(shuffle(baseSeats));
         count++;
         if (count > 25) { 
           clearInterval(timer);
           renderSeats(generateRiggedSeats(baseSeats));
-          btn.disabled = false;
+          if (btn) btn.disabled = false;
         }
       }, 40);
     }
 
-    // 强行等待 DOM 加载完毕后再渲染座位
-    window.onload = function() {
+    // 确保网页准备完毕后立即渲染
+    function init() {
       renderSeats(getOriginalSeats());
-    };
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   </script>
 </body>
 </html>
